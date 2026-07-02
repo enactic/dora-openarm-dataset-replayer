@@ -1,0 +1,86 @@
+# Copyright 2026 Enactic, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+nodes:
+  - id: replayer
+    build: pip install -e ../
+    path: dora-openarm-dataset-replayer
+    env:
+      # Specify a dataset path by environment variable
+      # DATASET: "..."
+    inputs:
+      # Just to keep this node alive while this is replaying
+      tick: dora/timer/secs/1
+    outputs:
+      - arm_right_action
+      - arm_right_observation
+      - arm_left_action
+      - arm_left_observation
+      - lifter_action
+      - lifter_observation
+      - camera_wrist_right
+      - camera_wrist_left
+      - camera_ceiling
+      - camera_head_right
+      - camera_head_left
+
+  - id: mujoco
+    build: pip install dora-openarm-mujoco
+    path: dora-openarm-mujoco
+    args: "--viewer"
+    inputs:
+      position_right: replayer/arm_right_action
+      position_left: replayer/arm_left_action
+
+  - id: plot-wrist-right
+    build: pip install opencv-plot
+    path: opencv-plot
+    inputs:
+      image: replayer/camera_wrist_right
+
+  - id: plot-wrist-left
+    build: pip install opencv-plot
+    path: opencv-plot
+    inputs:
+      image: replayer/camera_wrist_left
+
+  - id: plot-ceiling
+    build: pip install opencv-plot
+    path: opencv-plot
+    inputs:
+      image: replayer/camera_ceiling
+
+  - id: plot-head-right
+    build: pip install opencv-plot
+    path: opencv-plot
+    inputs:
+      image: replayer/camera_head_right
+
+  - id: plot-head-left
+    build: pip install opencv-plot
+    path: opencv-plot
+    inputs:
+      image: replayer/camera_head_left
+
+  - id: classifier
+    build: pip install dora-openarm-classifier
+    path: dora-openarm-classifier
+    env:
+      # Specify a question to check whether this task is completed
+      # successfully or not by environment variable
+      # QUESTION: "..."
+    inputs:
+      image: replayer/camera_ceiling
+      position_right: replayer/arm_right_observation
+      position_left: replayer/arm_left_observation
