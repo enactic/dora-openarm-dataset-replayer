@@ -19,7 +19,6 @@ import dora
 import openarm_dataset
 import os
 import pandas as pd
-import pathlib
 import pyarrow as pa
 import tempfile
 import time
@@ -143,17 +142,18 @@ class Replayer:
 def main():
     """Replay an existing OpenArm Dataset in a dora-rs dataflow."""
     parser = argparse.ArgumentParser(description="Replay an OpenArm Dataset")
+    dataset_default = os.getenv("DATASET")
     parser.add_argument(
         "--dataset",
-        type=pathlib.Path,
-        default=os.getenv("DATASET"),
+        default=dataset_default,
         help="Path to the OpenArm Dataset",
+        required=dataset_default is None,
     )
     parser.add_argument(
         "--episode",
-        type=int,
         default=int(os.getenv("EPISODE", 0)),
         help="The Nth episode to replay",
+        type=int,
     )
     args = parser.parse_args()
 
